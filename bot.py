@@ -1,37 +1,58 @@
 import requests
 import time
 import random
+import os
+from flask import Flask
+import threading
 
-BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN"
-CHANNEL_USERNAME = "@DealsYeti"
+# ==============================
+# ENVIRONMENT VARIABLES
+# ==============================
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")
+
+# ==============================
+# SAMPLE DEALS (can replace later)
+# ==============================
 
 deals = [
-{
-"title":"🔥 Boat Airdopes 141",
-"price":"₹399",
-"link":"https://amzn.to/testdeal",
-"discount":"72%"
-},
-{
-"title":"🔥 Noise Smartwatch",
-"price":"₹1299",
-"link":"https://amzn.to/testdeal",
-"discount":"55%"
-}
+    {
+        "name": "Boat Airdopes 141",
+        "price": "₹1299",
+        "discount": "55%",
+        "link": "https://amzn.to/testdeal1"
+    },
+    {
+        "name": "Noise Smartwatch",
+        "price": "₹1999",
+        "discount": "60%",
+        "link": "https://amzn.to/testdeal2"
+    },
+    {
+        "name": "Samsung Powerbank",
+        "price": "₹899",
+        "discount": "50%",
+        "link": "https://amzn.to/testdeal3"
+    }
 ]
+
+# ==============================
+# TELEGRAM MESSAGE SENDER
+# ==============================
 
 def send_deal(deal):
 
     message = f"""
-🔥 {deal['discount']} OFF
+🔥 DEAL ALERT 🔥
 
-🛒 {deal['title']}
-
+🛍 Product: {deal['name']}
 💰 Price: {deal['price']}
+🎯 Discount: {deal['discount']}
 
 ⭐ Best Deal Today
 
-Buy Now 👇
+👉 Buy Now:
 {deal['link']}
 """
 
@@ -44,15 +65,21 @@ Buy Now 👇
 
     requests.post(url, data=payload)
 
-while True:
 
-    deal = random.choice(deals)
+# ==============================
+# TELEGRAM DEAL LOOP
+# ==============================
 
-    send_deal(deal)
+def deal_loop():
+    while True:
+        deal = random.choice(deals)
+        send_deal(deal)
+        time.sleep(3600)  # 1 hour
 
-    time.sleep(3600)
-from flask import Flask
-import threading
+
+# ==============================
+# FLASK SERVER FOR RENDER
+# ==============================
 
 app = Flask(__name__)
 
@@ -60,7 +87,14 @@ app = Flask(__name__)
 def home():
     return "DealsYeti Bot Running"
 
+
 def run_web():
     app.run(host="0.0.0.0", port=10000)
 
+
+# ==============================
+# START EVERYTHING
+# ==============================
+
 threading.Thread(target=run_web).start()
+threading.Thread(target=deal_loop).start()
